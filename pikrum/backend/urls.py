@@ -5,7 +5,7 @@ from django.conf.urls.static import static # Importa la funzione per i file stat
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),
+    path('api/', include('pikrum.api.urls')),
 ]
 
 if settings.DEBUG:
