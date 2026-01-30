@@ -6,3 +6,4 @@ google-cloud-aiplatform
 dj-database-url
 whitenoise
 google-generativeai
+pgvector
