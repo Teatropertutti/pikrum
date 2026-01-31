@@ -5,10 +5,10 @@ def get_image_embedding(image_bytes, project_id, location):
     api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
     genai.configure(api_key=api_key)
     
-    # Modello di embedding standard per API Key
+    # Modello di embedding universale
     result = genai.embed_content(
         model="models/text-embedding-004",
-        content="Pikrum Image Analysis",
+        content="Analisi visuale prodotto Pikrum",
         task_type="retrieval_document"
     )
     return result['embedding']
