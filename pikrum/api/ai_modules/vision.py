@@ -1,16 +1,15 @@
 import json
-import google.generativeai as genai
+from genai import Client
 from django.conf import settings
 
 def get_image_metadata(image_bytes, project_id, location, taxonomy_guidance=None):
     api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
-    genai.configure(api_key=api_key)
     
-    # AGGIORNATO: Usiamo il codice modello visto nel tuo screenshot
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    # Nuovo client della libreria 2026
+    client = Client(api_key=api_key)
     
     prompt = """
-    Analizza l'immagine e restituisci SOLO un JSON:
+    Sei un esperto catalogatore. Analizza l'immagine e restituisci SOLO un JSON:
     {
       "title": "nome prodotto",
       "long_description": "descrizione accurata",
@@ -18,15 +17,18 @@ def get_image_metadata(image_bytes, project_id, location, taxonomy_guidance=None
     }
     """
     
-    # Chiamata ottimizzata per Gemini 2.5+
-    response = model.generate_content([
-        {"mime_type": "image/jpeg", "data": image_bytes},
-        prompt
-    ])
+    # Utilizziamo gemini-2.0-flash come da documentazione aggiornata
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[
+            {"mime_type": "image/jpeg", "data": image_bytes},
+            prompt
+        ]
+    )
     
     try:
-        clean_json = response.text.strip().removeprefix("```json").removesuffix("```").strip()
-        return json.loads(clean_json)
+        # La nuova libreria restituisce l'oggetto in modo più diretto
+        return json.loads(response.text.strip().strip('```json').strip('```'))
     except:
         import re
         match = re.search(r'\{.*\}', response.text, re.DOTALL)
