@@ -3,7 +3,7 @@
 import pgvector.django.vector
 import uuid
 from django.db import migrations, models
-
+from pgvector.django import VectorExtension # <--- AGGIUNTO
 
 class Migration(migrations.Migration):
 
@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        VectorExtension(), # <--- AGGIUNTO COME PRIMA OPERAZIONE
         migrations.CreateModel(
             name='CatalogedImage',
             fields=[
