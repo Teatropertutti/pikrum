@@ -78,6 +78,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 
 VERTEX_AI_CONFIG = {
-    "api_key": os.environ.get("GEMINI_API_KEY"),
-    "project_id": "PROJECT_ID",
+    "API_KEY": os.environ.get("GEMINI_API_KEY"),
+    "PROJECT_ID": os.environ.get("PROJECT_ID"),
+    "LOCATION": "us-central1",      # Regione standard per Vertex AI/Gemini
 }
