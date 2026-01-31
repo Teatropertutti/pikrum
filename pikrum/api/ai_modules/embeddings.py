@@ -1,23 +1,25 @@
-from genai import Client
+import google.generativeai as genai
 from django.conf import settings
 
 def get_image_embedding(image_bytes, project_id, location):
     api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
-    client = Client(api_key=api_key)
+    genai.configure(api_key=api_key)
     
-    # Nuovo metodo per gli embeddings
-    result = client.models.embed_content(
-        model="text-embedding-004",
-        contents="Analisi visuale Pikrum"
+    # Modello di embedding standard per API Key
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content="Pikrum Image Analysis",
+        task_type="retrieval_document"
     )
-    return result.embeddings[0].values
+    return result['embedding']
 
 def get_text_embedding(text_query, project_id, location):
     api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
-    client = Client(api_key=api_key)
+    genai.configure(api_key=api_key)
     
-    result = client.models.embed_content(
-        model="text-embedding-004",
-        contents=text_query
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content=text_query,
+        task_type="retrieval_query"
     )
-    return result.embeddings[0].values
+    return result['embedding']
