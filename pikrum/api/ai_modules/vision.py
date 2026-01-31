@@ -1,35 +1,31 @@
 import json
-from genai import Client
+import base64
+import requests
 from django.conf import settings
 
 def get_image_metadata(image_bytes, project_id, location, taxonomy_guidance=None):
     api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     
-    # Nuovo client della libreria 2026
-    client = Client(api_key=api_key)
+    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
     
-    prompt = """
-    Sei un esperto catalogatore. Analizza l'immagine e restituisci SOLO un JSON:
-    {
-      "title": "nome prodotto",
-      "long_description": "descrizione accurata",
-      "tags": ["tag1", "tag2"]
+    prompt = "Sei un esperto catalogatore. Analizza l'immagine e restituisci SOLO un JSON: {\"title\": \"...\", \"long_description\": \"...\", \"tags\": []}"
+    
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                {"inline_data": {"mime_type": "image/jpeg", "data": image_base64}}
+            ]
+        }]
     }
-    """
     
-    # Utilizziamo gemini-2.0-flash come da documentazione aggiornata
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[
-            {"mime_type": "image/jpeg", "data": image_bytes},
-            prompt
-        ]
-    )
+    response = requests.post(url, json=payload)
+    res_json = response.json()
     
     try:
-        # La nuova libreria restituisce l'oggetto in modo più diretto
-        return json.loads(response.text.strip().strip('```json').strip('```'))
+        text = res_json['candidates'][0]['content']['parts'][0]['text']
+        clean = text.strip().replace('```json', '').replace('```', '').strip()
+        return json.loads(clean)
     except:
-        import re
-        match = re.search(r'\{.*\}', response.text, re.DOTALL)
-        return json.loads(match.group()) if match else {}
+        return {"title": "Oggetto Rilevato", "long_description": "Descrizione non disponibile", "tags": []}
