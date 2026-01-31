@@ -1,49 +1,42 @@
 import json
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+import google.generativeai as genai
 from django.conf import settings
 
 def get_image_metadata(image_bytes, project_id, location, taxonomy_guidance=None):
-    # Recuperiamo la chiave API dai settaggi che abbiamo configurato prima
+    # Prendiamo la chiave che hai messo nelle variabili di Railway
     api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
     
-    # Inizializziamo Vertex AI passando esplicitamente la API_KEY.
-    # Questo evita l'errore DefaultCredentialsError.
-    vertexai.init(
-        project=project_id, 
-        location=location,
-        api_key=api_key
-    )
+    # Configuriamo Gemini direttamente
+    genai.configure(api_key=api_key)
     
-    model = GenerativeModel("gemini-1.5-flash")
+    # Selezioniamo il modello più veloce ed economico per le immagini
+    model = genai.GenerativeModel("gemini-1.5-flash")
     
     prompt = """
-    Sei un esperto catalogatore museale. Analizza l'immagine e restituisci SOLO un JSON:
+    Sei un esperto catalogatore. Analizza l'immagine e restituisci SOLO un JSON:
     {
-      "title": "max 60 caratteri",
-      "long_description": "circa 300 caratteri",
+      "title": "nome prodotto",
+      "long_description": "descrizione accurata",
       "tags": ["tag1", "tag2"]
     }
     """
     if taxonomy_guidance:
         prompt += f"\nUsa questi tag se pertinenti: {taxonomy_guidance}"
 
-    # Chiamata al modello
+    # Chiamata diretta (non serve più Part.from_data di vertexai)
     response = model.generate_content([
-        Part.from_data(data=image_bytes, mime_type="image/jpeg"),
+        {"mime_type": "image/jpeg", "data": image_bytes},
         prompt
     ])
     
-    # Pulizia dell'output per evitare errori di parsing JSON
-    text_response = response.text
-    clean_json = text_response.replace('```json', '').replace('```', '').strip()
-    
     try:
+        # Puliamo il testo da eventuali ```json ... ```
+        clean_json = response.text.strip().removeprefix("```json").removesuffix("```").strip()
         return json.loads(clean_json)
-    except json.JSONDecodeError:
-        # Fallback nel caso l'AI aggiunga testo extra non previsto
+    except Exception as e:
+        # Se l'AI chiacchiera troppo, cerchiamo il JSON tra le parentesi graffe
         import re
-        json_match = re.search(r'\{.*\}', clean_json, re.DOTALL)
-        if json_match:
-            return json.loads(json_match.group())
-        raise Exception("L'AI ha restituito un formato non valido")
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        raise Exception(f"Errore parsing AI: {str(e)}")
