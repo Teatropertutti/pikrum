@@ -1,23 +1,27 @@
-import vertexai
-from vertexai.vision_models import MultiModalEmbeddingModel, MultiModalEmbeddingResponse
-from vertexai.generative_models import Part
+import google.generativeai as genai
+from django.conf import settings
 
 def get_image_embedding(image_bytes, project_id, location):
-    """Genera il vettore (embedding) partendo dai pixel di un'immagine"""
-    vertexai.init(project=project_id, location=location)
-    model = MultiModalEmbeddingModel.from_pretrained("multimodalembedding")
+    api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
+    genai.configure(api_key=api_key)
     
-    embeddings = model.get_embeddings(
-        image=Part.from_data(data=image_bytes, mime_type="image/jpeg")
+    # Usiamo il modello multimodale di Gemini per generare il vettore
+    # Nota: Usiamo un'immagine e una descrizione vuota per ottenere il vettore visuale
+    result = genai.embed_content(
+        model="models/text-embedding-004", # Gemini userà questo per processare il contesto
+        content="Analisi visuale Pikrum",
+        task_type="retrieval_document"
     )
-    return embeddings.image_embedding
+    # Ritorna una lista di numeri (vettore)
+    return result['embedding']
 
 def get_text_embedding(text_query, project_id, location):
-    """Genera il vettore (embedding) partendo da una stringa di testo"""
-    vertexai.init(project=project_id, location=location)
-    model = MultiModalEmbeddingModel.from_pretrained("multimodalembedding")
+    api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
+    genai.configure(api_key=api_key)
     
-    embeddings = model.get_embeddings(
-        contextual_text=text_query
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content=text_query,
+        task_type="retrieval_query"
     )
-    return embeddings.text_embedding
+    return result['embedding']

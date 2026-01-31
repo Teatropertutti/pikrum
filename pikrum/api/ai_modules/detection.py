@@ -1,26 +1,24 @@
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+import google.generativeai as genai
 import json
+from django.conf import settings
 
 def detect_objects_in_image(image_bytes, project_id, location):
-    vertexai.init(project=project_id, location=location)
-    model = GenerativeModel("gemini-1.5-flash")
+    api_key = settings.VERTEX_AI_CONFIG.get("API_KEY")
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
     
-    # Prompt specifico per ottenere le coordinate degli oggetti
     prompt = """
     Individua gli oggetti principali in questa immagine. 
-    Per ogni oggetto, restituisci un JSON con il nome dell'oggetto e le coordinate box 2D 
-    nel formato [ymin, xmin, ymax, xmax] normalizzato (0-1000).
     Restituisci solo una lista JSON: [{"box_2d": [ymin, xmin, ymax, xmax], "label": "nome_oggetto"}]
+    Le coordinate box 2D devono essere nel formato normalizzato (0-1000).
     """
     
-    response = model.generate_content([
-        Part.from_data(data=image_bytes, mime_type="image/jpeg"),
-        prompt
-    ])
-    
     try:
-        clean_json = response.text.replace('```json', '').replace('```', '').strip()
+        response = model.generate_content([
+            {"mime_type": "image/jpeg", "data": image_bytes},
+            prompt
+        ])
+        clean_json = response.text.strip().removeprefix("```json").removesuffix("```").strip()
         return json.loads(clean_json)
     except:
-        return [] # Se fallisce, restituisce lista vuota
+        return []
