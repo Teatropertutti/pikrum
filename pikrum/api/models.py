@@ -33,10 +33,10 @@ class ImageDetection(models.Model):
     generated_tags = models.JSONField(default=list, blank=True)
     
     # Indica se questo oggetto è una Reference (campione di riferimento)
-    is_reference = models.BooleanField(default=False)
+    is_reference = models.BooleanField(default=True)
     
     # Indica se l'utente ha confermato l'identificazione (utile per il flusso "al volo")
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=True)
     
     bounding_box = models.JSONField(help_text="Formato: [ymin, xmin, ymax, xmax]")
     embedding_vector = models.JSONField(blank=True, null=True)    
