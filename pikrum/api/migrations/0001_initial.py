@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        VectorExtension(), # <--- AGGIUNTO COME PRIMA OPERAZIONE
+
         migrations.CreateModel(
             name='CatalogedImage',
             fields=[
