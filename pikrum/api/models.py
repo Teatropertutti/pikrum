@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from pgvector.django import VectorField
+
 
 # --- TABELLE IMMAGINI ---
 
@@ -39,8 +39,7 @@ class ImageDetection(models.Model):
     is_verified = models.BooleanField(default=False)
     
     bounding_box = models.JSONField(help_text="Formato: [ymin, xmin, ymax, xmax]")
-    embedding_vector = VectorField(dimensions=768, null=True, blank=True)
-    
+    embedding_vector = models.JSONField(blank=True, null=True)    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
